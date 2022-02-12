@@ -13,15 +13,19 @@
             <div>
                 <div>
                     <h2>
-                        <%= user.username %>
+                        Username : <%= user.username %>
                     </h2>
                     <h3>
-                        <%= user.name %>
+                        Name : <%= user.name %>
                     </h3>
                 </div>
             </div>
         </div>
-        <% products.forEach(function(image) { %>
+        <hr style="width: 40%;" />
+        <h1>
+            Bidded on These Products
+        </h1>
+        <% if(biddedOnProducts) { biddedOnProducts.forEach(function(image) { %>
             <div class="imgcontainer" style="cursor: pointer;" onclick="window.location='/products/<%=image._id %>';">
                 <img src="data:image/<%=image.img.contentType%>;base64,
                      <%=image.img.data.toString('base64')%>">
@@ -29,15 +33,12 @@
                     <h3>
                         <%= image.title %>
                     </h3>
-                    <hr />
                     <p>
-                        <a href="/products/edit/<%=image._id %>">
-                            Edit
+                        By <a href="/users/<%=image.uid.username %>">
+                            <%= image.uid.username %>
                         </a>
-                    <form action="/products/delete/<%=image._id %>" method="POST">
-                        <button type="submit">Delete</button>
-                    </form>
                     </p>
+                    <hr />
                     <p>
                         <%= image.about %>
                     </p>
@@ -74,8 +75,67 @@
                             <% } %>
                 </div>
             </div>
-            <% }) %>
-                <%- include('partials/footer'); -%>
+            <% })} %>
+                <hr style="width: 40%;" />
+                <h1>
+                    Products added for Auction
+                </h1>
+                <% products.forEach(function(image) { %>
+                    <div class="imgcontainer" style="cursor: pointer;"
+                        onclick="window.location='/products/<%=image._id %>';">
+                        <img src="data:image/<%=image.img.contentType%>;base64,
+                     <%=image.img.data.toString('base64')%>">
+                        <div>
+                            <h3>
+                                <%= image.title %>
+                            </h3>
+                            <hr />
+                            <p>
+                                <a href="/products/edit/<%=image._id %>">
+                                    Edit
+                                </a>
+                            <form action="/products/delete/<%=image._id %>" method="POST">
+                                <button type="submit">Delete</button>
+                            </form>
+                            </p>
+                            <p>
+                                <%= image.about %>
+                            </p>
+                            <div class="tag">
+                                <% image.tags.forEach(function (tag) { %>
+                                    <p>
+                                        <%= tag %>
+                                    </p>
+                                    <% }) %>
+                            </div>
+                            <% if(image.bidders.length> 0) { %>
+                                <div>
+                                    <hr />
+                                    Highest Bid
+                                    <hr />
+                                    <% var x=image.bidders.sort((a, b)=> (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 :
+                                        0))[0] %>
+                                        <div class="bid">
+                                            <span>
+                                                <a href="/users/<%= x.bidder.username %>">
+                                                    <%= x.bidder.username %>
+                                                </a>
+                                            </span>
+                                            <span>
+                                                $ <%= x.bid %>
+                                            </span>
+                                        </div>
+                                </div>
+                                <% } else { %>
+                                    <div>
+                                        <hr />
+                                        No Bids Yet!
+                                    </div>
+                                    <% } %>
+                        </div>
+                    </div>
+                    <% }) %>
+                        <%- include('partials/footer'); -%>
 </body>
 
 </html>

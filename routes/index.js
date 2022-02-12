@@ -24,7 +24,7 @@ router.get('/signup', function (req, res, next) {
 });
 
 //GET Profile Page
-router.get('/profile', function (req, res, next) {
+router.get('/profile', async (req, res, next) => {
   if (!req.session.loggedIn) {
     res.redirect('/');
     res.end();
@@ -34,6 +34,9 @@ router.get('/profile', function (req, res, next) {
       name: req.session.name,
       _id: req.session._id
     }
+    const biddedOnProducts = await Product.find({ bidders: { $elemMatch: { bidder: new ObjectId(user._id) } } })
+      .populate('uid')
+      .populate('bidders.bidder');
     Product.find({ uid: new ObjectId(user._id) })
       .populate('bidders.bidder')
       .exec((err, products) => {
@@ -43,7 +46,8 @@ router.get('/profile', function (req, res, next) {
         res.render('profile', {
           title: 'Register',
           user,
-          products
+          products,
+          biddedOnProducts
         });
       });
   }
