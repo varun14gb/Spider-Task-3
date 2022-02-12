@@ -1,15 +1,10 @@
 var express = require('express');
-const { check, validationResult } = require('express-validator');
 const Product = require('../models/Product');
 var ObjectId = require('mongodb').ObjectId;
-const User = require('../models/User');
-const createError = require('http-errors');
 var fs = require('fs');
 var path = require('path');
 var multer = require('multer');
-const { profile } = require('console');
-const res = require('express/lib/response');
-const req = require('express/lib/request');
+
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/')
@@ -31,10 +26,13 @@ router.get('/', function (req, res, next) {
         .populate({ path: 'bidders.bidder', select: '-password' })
         .exec((err, products) => {
             if (err) {
-                res.send(error);
+                res.render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
             } else {
-                console.log(products[1].bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 :
-                    0))[0].bidder.username);
                 res.render('products', {
                     title: 'Products',
                     products
@@ -57,7 +55,12 @@ router.post('/', upload.single('image'), function (req, res, next) {
     }
     Product.create(obj, (err, product) => {
         if (err) {
-            return res.send("error");
+            return res.render('error', {
+                error: {
+                    status: '500',
+                    message: 'Something Wrong'
+                }
+            });
         }
         res.render('product', {
             title: product.title,
@@ -73,28 +76,51 @@ router.get('/add', function (req, res, next) {
 
 // GET a Product Information
 router.get('/:productid', async (req, res, next) => {
-    const product = await Product.findOne({ _id: new ObjectId(req.params.productid) })
-        .populate({ path: 'uid', select: '-password' })
-        .populate({ path: 'bidders.bidder', select: '-password' });
-    if (!product) {
-        next(createError(404));
+    try {
+        const product = await Product.findOne({ _id: new ObjectId(req.params.productid) })
+            .populate({ path: 'uid', select: '-password' })
+            .populate({ path: 'bidders.bidder', select: '-password' });
+        if (!product) {
+            return res.render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
+        res.render('product', {
+            title: product.title,
+            product
+        });
+    } catch (e) {
+        return res.render('error', {
+            error: {
+                status: '500',
+                message: 'Oops!'
+            }
+        });
     }
-    product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
-    res.render('product', {
-        title: product.title,
-        product
-    });
 });
 
 // GET Product Edit Page
 router.get('/edit/:productid', function (req, res, next) {
     Product.findOne({ _id: new ObjectId(req.params.productid) }, (err, product) => {
-        console.log(req.params.productid)
         if (err) {
-            return res.send("Error");
+            return res.render('error', {
+                error: {
+                    status: '500',
+                    message: 'Something Wrong'
+                }
+            });
         }
         if (product.uid.toString() != req.session._id) {
-            return res.send("Not Authorized");
+            return res.render('error', {
+                error: {
+                    status: '403',
+                    message: 'Not Authorized'
+                }
+            });
         }
         product.tags = product.tags.join(" ");
         res.render('updateProduct', {
@@ -105,48 +131,122 @@ router.get('/edit/:productid', function (req, res, next) {
 });
 
 // POST Update Product's detail
-router.post('/edit/:productid', upload.array(), (req, res, next) => {
-    Product.findOneAndUpdate({ _id: new ObjectId(req.params.productid) }, {
-        uid: req.session._id,
-        title: req.body.title,
-        about: req.body.about,
-        tags: req.body.tags.split(' '),
-        time: new Date(req.body.time)
-    }, (err, product) => {
-        if (err) {
-            return res.send("Error");
+router.post('/edit/:productid', upload.array(), async (req, res, next) => {
+    try {
+        const product = await Product.findOne({ _id: new ObjectId(req.params.productid) });
+        if (!product) {
+            return res.render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
         }
-        if (product.uid != req.session._id) {
-            return res.send("Not Authorized");
+        if (product.uid.toString() != req.session._id) {
+            return res.render('error', {
+                error: {
+                    status: '403',
+                    message: 'Not Authorized'
+                }
+            });
         }
-        res.redirect('/products/' + req.params.productid);
-    });
+        Product.findOneAndUpdate({ _id: new ObjectId(req.params.productid) }, {
+            uid: req.session._id,
+            title: req.body.title,
+            about: req.body.about,
+            tags: req.body.tags.split(' '),
+            time: new Date(req.body.time)
+        }, (err, pro) => {
+            if (err) {
+                return res.render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
+            }
+            res.redirect('/products/' + req.params.productid);
+        });
+    } catch (error) {
+        return res.render('error', {
+            error: {
+                status: '500',
+                message: 'Something Wrong'
+            }
+        });
+    }
 });
 
 // POST Delete a Product
-router.post('/delete/:productid', function (req, res, next) {
-    Product.deleteOne({ _id: new ObjectId(req.params.productid) }, (err, pr) => {
-        if (err) {
-            console.log(err);
-            return res.send("Some Error");
+router.post('/delete/:productid', async (req, res, next) => {
+    try {
+        const product = await Product.findOne({ _id: new ObjectId(req.params.productid) });
+        if (!product) {
+            return res.render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
         }
-    })
-    res.send('Deleted');
+        if (product.uid.toString() != req.session._id) {
+            return res.render('error', {
+                error: {
+                    status: '403',
+                    message: 'Not Authorized'
+                }
+            });
+        }
+        Product.deleteOne({ _id: new ObjectId(req.params.productid) }, (err, pr) => {
+            if (err) {
+                return res.render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
+            }
+        })
+        res.send('Deleted');
+    } catch (error) {
+        return res.render('error', {
+            error: {
+                status: '500',
+                message: 'Something Wrong'
+            }
+        });
+    }
+
 });
 
 // POST Bidding on a Product
 router.post('/bid/:productid', function (req, res, next) {
     Product.findOne({ _id: req.params.productid }, (err, product) => {
         if (err) {
-            return res.send("Not Found");
+            return res.render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
         }
         if (product.time < new Date()) {
-            return res.send("You are late");
+            return res.render('error', {
+                error: {
+                    status: '300',
+                    message: 'You are late for bidding on the product!'
+                }
+            });
         }
         if (product.bidders.length > 0) {
             product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
             if (req.body.bid <= product.bidders[0].bid) {
-                return res.send("You must Bid Higher than the current highest bid!");
+                return res.render('error', {
+                    error: {
+                        status: '300',
+                        message: 'You must bid higher than the current highest bid'
+                    }
+                });
             }
         }
         Product.updateOne({ _id: req.params.productid }, {
@@ -158,7 +258,12 @@ router.post('/bid/:productid', function (req, res, next) {
             }
         }, (err, pro) => {
             if (err) {
-                return res.send("Error Occured");
+                return res.render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
             }
             res.send("Bid Added");
         })

@@ -2,7 +2,8 @@ var express = require('express');
 var bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
-const createError = require('http-errors');
+const Product = require('../models/Product');
+var ObjectId = require('mongodb').ObjectId;
 var multer = require('multer');
 var upload = multer();
 var router = express.Router();
@@ -11,16 +12,30 @@ router.use(upload.array());
 
 // GET users listing
 router.get('/', async (req, res, next) => {
-  const users = await User.aggregate([
-    { $project: { password: 0 } }
-  ]);
-  if (!users) {
-    return next(createError(404));
+  try {
+    const users = await User.aggregate([
+      { $project: { password: 0 } }
+    ]);
+    if (!users) {
+      return res.render('error', {
+        error: {
+          status: '404',
+          message: 'Not Found'
+        }
+      });
+    }
+    res.render('users', {
+      title: 'Users',
+      users
+    });
+  } catch (error) {
+    return res.render('error', {
+      error: {
+        status: '500',
+        message: 'Oops!'
+      }
+    });
   }
-  res.render('users', {
-    title: 'Users',
-    users
-  });
 });
 
 // POST Registeration Information
@@ -128,22 +143,58 @@ router.post('/login', [
 // DELETE Logout the user
 router.get('/logout', (req, res, next) => {
   req.session.destroy((err) => {
-    return res.send(err);
+    return res.render('error', {
+      error: {
+        status: '500',
+        message: 'Something Wrong'
+      }
+    });
   })
   res.redirect('/');
 })
 
 // GET a User's Information
 router.get('/:userid', async (req, res, next) => {
-  const user = await User.findOne({ username: req.params.userid });
-  if (!user) {
-    return next(createError(404));
+  try {
+    const user = await User.findOne({ username: req.params.userid });
+    if (!user) {
+      return res.render('error', {
+        error: {
+          status: '404',
+          message: 'Not Found'
+        }
+      });
+    }
+    user.password = null;
+    const biddedOnProducts = await Product.find({ bidders: { $elemMatch: { bidder: new ObjectId(user._id) } } })
+      .populate('uid')
+      .populate('bidders.bidder');
+    Product.find({ uid: new ObjectId(user._id) })
+      .populate('bidders.bidder')
+      .exec((err, products) => {
+        if (err) {
+          return res.render('error', {
+            error: {
+              status: '500',
+              message: 'Something Wrong'
+            }
+          });
+        }
+        res.render('user', {
+          title: 'User Profile',
+          user,
+          products,
+          biddedOnProducts
+        });
+      });
+  } catch (error) {
+    return res.render('error', {
+      error: {
+        status: '500',
+        message: 'Something Wrong'
+      }
+    });
   }
-  user.password = null;
-  res.render('user', {
-    title: user.name,
-    user
-  });
 });
 
 module.exports = router;

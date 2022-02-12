@@ -4,16 +4,16 @@
 <head>
     <title>Auction | <%= title %>
     </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 
 <body>
     <header>
-        <h1>Auction</h1>
+        <i>
+            <h1>Auction</h1>
+        </i>
     </header>
-    <h1>
-        <%= title %>
-    </h1>
     <div class="errors">
         <% if(typeof errors !='undefined' ) { errors.forEach(function(error) { %>
             <h6>
@@ -22,11 +22,14 @@
             <% })} %>
     </div>
     <form name="registrationForm" action="/users/register" method="POST">
+        <h1>
+            <%= title %>
+        </h1>
         <input name="name" type="text" placeholder="Enter Name" required />
         <input name="username" type="text" placeholder="Enter Unique Username" required />
         <input name="password" type="password" minlength="6" placeholder="Enter Password" required />
         <input name="confirmPassword" type="password" minlength="6" placeholder="Confirm Password" required />
-        <button type="submit">Submit</button>
+        <button type="submit">Signup</button>
     </form>
     <p>Already registered? <a href="/">Login Here</a></p>
     <%- include('partials/footer'); -%>

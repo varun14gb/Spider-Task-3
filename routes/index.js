@@ -34,22 +34,36 @@ router.get('/profile', async (req, res, next) => {
       name: req.session.name,
       _id: req.session._id
     }
-    const biddedOnProducts = await Product.find({ bidders: { $elemMatch: { bidder: new ObjectId(user._id) } } })
-      .populate('uid')
-      .populate('bidders.bidder');
-    Product.find({ uid: new ObjectId(user._id) })
-      .populate('bidders.bidder')
-      .exec((err, products) => {
-        if (err) {
-          return res.send("Err");
-        }
-        res.render('profile', {
-          title: 'Register',
-          user,
-          products,
-          biddedOnProducts
+    try {
+      const biddedOnProducts = await Product.find({ bidders: { $elemMatch: { bidder: new ObjectId(user._id) } } })
+        .populate('uid')
+        .populate('bidders.bidder');
+      Product.find({ uid: new ObjectId(user._id) })
+        .populate('bidders.bidder')
+        .exec((err, products) => {
+          if (err) {
+            return res.render('error', {
+              error: {
+                status: '500',
+                message: 'Something Wrong'
+              }
+            });
+          }
+          res.render('profile', {
+            title: 'Profile',
+            user,
+            products,
+            biddedOnProducts
+          });
         });
+    } catch (error) {
+      return res.render('error', {
+        error: {
+          status: '500',
+          message: 'Something Wrong'
+        }
       });
+    }
   }
 });
 

@@ -4,15 +4,16 @@
 <head>
     <title>Auction | <%= title %>
     </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 
 <body>
     <%- include('partials/header'); -%>
-        <h1>
-            <%= title %>
-        </h1>
         <form name="productForm" action="/products" method="POST" enctype="multipart/form-data">
+            <h1>
+                <%= title %>
+            </h1>
             <input name="title" type="text" placeholder="Enter Title" required />
             <input name="about" type="text" placeholder="About the Product" />
             <input name="tags" type="text" placeholder="Tags separated by space" />

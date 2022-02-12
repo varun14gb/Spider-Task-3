@@ -5,19 +5,21 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var sessions = require('express-session');
 var mongoose = require('mongoose');
+const dotenv = require('dotenv');
+dotenv.config();
 
-mongoose.connect('mongodb://127.0.0.1:27017/auction');
+mongoose.connect(process.env.dburl);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var productsRouter = require('./routes/products');
-const { auth } = require('./models/middleware/auth');
+const { auth } = require('./middleware/auth');
 
 var app = express();
 
 app.use(cookieParser());
 app.use(sessions({
-  secret: "TOpSecret69",
+  secret: process.env.secret,
   name: 'sessionID',
   saveUninitialized: false,
   cookie: {

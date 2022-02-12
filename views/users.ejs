@@ -4,6 +4,7 @@
 <head>
     <title>Auction | <%= title %>
     </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 
@@ -13,17 +14,13 @@
             <%= title %>
         </h1>
         <% users.forEach(function(user) { %>
-            <div>
-                <div>
-                    <div>
-                        <h5>
-                            <%= user.username %>
-                        </h5>
-                        <p>
-                            <%= user.name %>
-                        </p>
-                    </div>
-                </div>
+            <div class="userCard" style="cursor: pointer;" onclick="window.location='/users/<%=user.username%>';">
+                <h5>
+                    Username : <%= user.username %>
+                </h5>
+                <p>
+                    Name : <%= user.name %>
+                </p>
             </div>
             <% }) %>
                 <%- include('partials/footer'); -%>
