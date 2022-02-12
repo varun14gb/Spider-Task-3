@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema({
     time: {
         type: Date
     },
-    bidders: [new mongoose.Schema({
+    bidders: [{
         bidder: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema({
         bid: {
             type: Number
         }
-    }, { _id: false })]
+    }]
 });
 
 module.exports = mongoose.model("Product", productSchema);

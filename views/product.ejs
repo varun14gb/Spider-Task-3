@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Auction | <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <%- include('partials/header'); -%>
+        <div class="imgcontainer">
+            <img src="data:product/<%=product.img.contentType%>;base64,
+                     <%=product.img.data.toString('base64')%>">
+            <div>
+                <h3>
+                    <%= product.title %>
+                </h3>
+                <p>
+                    By <a href="/users/<%=product.uid.username %>">
+                        <%= product.uid.username %>
+                    </a>
+                </p>
+                <hr />
+                <p>
+                    <%= product.about %>
+                </p>
+                <div class="tag">
+                    <% product.tags.forEach(function (tag) { %>
+                        <p>
+                            <%= tag %>
+                        </p>
+                        <% }) %>
+                </div>
+                <hr />
+                <% if (product.time < new Date()) { %>
+                    <div>
+                        Bidding Closed
+                    </div>
+                    <% } else { %>
+                        <form class="bidform" action="/products/bid/<%=product._id%>" method="POST">
+                            <input name="bid" min="1" type="number" placeholder="Enter Your Bid">
+                            <button type="submit">Place Bid</button>
+                        </form>
+                        <% } %>
+                            <div class="bids">
+                                <% product.bidders.forEach(function (bid) { %>
+                                    <div class="bid">
+                                        <span>
+                                            <a href="/users/<%=bid.bidder.username %>">
+                                                <%= bid.bidder.username %>
+                                            </a>
+                                        </span>
+                                        <span>
+                                            $ <%= bid.bid %>
+                                        </span>
+                                    </div>
+                                    <% }) %>
+                            </div>
+            </div>
+        </div>
+        <%- include('partials/footer'); -%>
+</body>
+
+</html>

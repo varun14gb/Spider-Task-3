@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Auction | <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <%- include('partials/header'); -%>
+        <h1>
+            <%= title %>
+        </h1>
+        <form name="productForm" action="/products/edit/<%=product._id%>" method="POST">
+            <input name="title" type="text" placeholder="Enter Title" value="<%=product.title%>" required />
+            <input name="about" type="text" placeholder="About the Product" value="<%=product.about%>" />
+            <input name="tags" type="text" placeholder="Tags separated by space" value="<%=product.tags%>" />
+            <input name="time" type="datetime-local" placeholder="Deadline for Bdding"
+                value="<%=product.time.toISOString().slice(0, -8)%>" required />
+            <button type="submit">Submit</button>
+        </form>
+        <%- include('partials/footer'); -%>
+</body>
+
+</html>

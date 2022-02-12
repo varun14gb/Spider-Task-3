@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Auction | <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <%- include('partials/header'); -%>
+        <h1>
+            <%= title %>
+        </h1>
+        <form name="productForm" action="/products" method="POST" enctype="multipart/form-data">
+            <input name="title" type="text" placeholder="Enter Title" required />
+            <input name="about" type="text" placeholder="About the Product" />
+            <input name="tags" type="text" placeholder="Tags separated by space" />
+            <input name="image" type="file" placeholder="Upload Image" required />
+            <input name="time" type="datetime-local" placeholder="Deadline for Bdding" required />
+            <button type="submit">Submit</button>
+        </form>
+        <%- include('partials/footer'); -%>
+</body>
+
+</html>

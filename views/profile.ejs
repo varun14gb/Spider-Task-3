@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Auction | <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <%- include('partials/header'); -%>
+        <div>
+            <div>
+                <div>
+                    <h2>
+                        <%= user.username %>
+                    </h2>
+                    <h3>
+                        <%= user.name %>
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <% products.forEach(function(image) { %>
+            <div class="imgcontainer" style="cursor: pointer;" onclick="window.location='/products/<%=image._id %>';">
+                <img src="data:image/<%=image.img.contentType%>;base64,
+                     <%=image.img.data.toString('base64')%>">
+                <div>
+                    <h3>
+                        <%= image.title %>
+                    </h3>
+                    <hr />
+                    <p>
+                        <a href="/products/edit/<%=image._id %>">
+                            Edit
+                        </a>
+                    <form action="/products/delete/<%=image._id %>" method="POST">
+                        <button type="submit">Delete</button>
+                    </form>
+                    </p>
+                    <p>
+                        <%= image.about %>
+                    </p>
+                    <div class="tag">
+                        <% image.tags.forEach(function (tag) { %>
+                            <p>
+                                <%= tag %>
+                            </p>
+                            <% }) %>
+                    </div>
+                    <% if(image.bidders.length> 0) { %>
+                        <div>
+                            <hr />
+                            Highest Bid
+                            <hr />
+                            <% var x=image.bidders.sort((a, b)=> (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 :
+                                0))[0] %>
+                                <div class="bid">
+                                    <span>
+                                        <a href="/users/<%= x.bidder.username %>">
+                                            <%= x.bidder.username %>
+                                        </a>
+                                    </span>
+                                    <span>
+                                        $ <%= x.bid %>
+                                    </span>
+                                </div>
+                        </div>
+                        <% } else { %>
+                            <div>
+                                <hr />
+                                No Bids Yet!
+                            </div>
+                            <% } %>
+                </div>
+            </div>
+            <% }) %>
+                <%- include('partials/footer'); -%>
+</body>
+
+</html>

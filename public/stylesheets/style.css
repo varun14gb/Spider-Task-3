@@ -1,8 +1,120 @@
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  min-width: 50%;
+}
+
+input {
+  margin: 8px;
+  padding: 5px;
+}
+
+button {
+  margin: 8px;
+  padding: 8px;
+  background-color: rgb(115, 115, 115);
+  color: white;
+  font-size: large;
+}
+
+.errors {
+  min-width: 50%;
+}
+
+.errors h6 {
+  background-color: rgb(247, 156, 156);
+  padding: 16px;
+  border-radius: 4px;
+  font-size: small;
+  font-weight: normal;
+}
+
+footer {
+  background-color: #c5f6fc;
+  width: 100%;
+  padding: 20px 0;
+}
+
+header {
+  display: flex;
+  background-color: #c5f6fc;
+  color: black;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+header h1 {
+  margin: 16px;
+}
+
+header ul {
+  display: flex;
+  justify-content: space-around;
+}
+
+header ul li {
+  list-style: none;
+  margin: 16px;
+}
+
+header ul li a {
+  color: black;
+  text-decoration: none;
 }
 
 a {
   color: #00B7FF;
+}
+
+.imgcontainer {
+  background-color: rgb(241, 241, 241);
+  width: 400px;
+  margin: 16px;
+  padding: 16px;
+  border: 1px solid rgb(159, 159, 159);
+}
+
+.imgcontainer img {
+  max-height: 400px;
+  max-width: 400px;
+}
+
+.tag {
+  display: flex;
+}
+
+.tag p {
+  background-color: tomato;
+  color: white;
+  margin: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.bid {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+
+.bidform {
+  display: flex;
+  background-color: rgba(0, 255, 38, 0.109);
+}
+
+.bidform button {
+  background-color: rgb(6, 175, 32);
 }

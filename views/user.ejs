@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Auction | <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <%- include('partials/header'); -%>
+        <div>
+            <div>
+                <div>
+                    <h4>
+                        <%= user.name %>
+                    </h4>
+                    <h5>
+                        <%= user.username %>
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <%- include('partials/footer'); -%>
+</body>
+
+</html>

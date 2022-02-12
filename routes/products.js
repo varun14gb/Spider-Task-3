@@ -26,14 +26,21 @@ var router = express.Router();
 
 // GET Products List
 router.get('/', function (req, res, next) {
-    Product.find({}, (err, products) => {
-        if (err) {
-            res.send(error);
-        } else {
-            console.log(products);
-            res.send("succeesss");
-        }
-    })
+    Product.find({})
+        .populate({ path: 'uid', select: '-password' })
+        .populate({ path: 'bidders.bidder', select: '-password' })
+        .exec((err, products) => {
+            if (err) {
+                res.send(error);
+            } else {
+                console.log(products[1].bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 :
+                    0))[0].bidder.username);
+                res.render('products', {
+                    title: 'Products',
+                    products
+                });
+            }
+        })
 });
 
 // POST a Product
@@ -41,33 +48,70 @@ router.post('/', upload.single('image'), function (req, res, next) {
     var obj = {
         uid: req.session._id,
         title: req.body.title,
+        tags: req.body.tags.split(' '),
+        time: new Date(req.body.time),
         img: {
             data: fs.readFileSync(path.join(__dirname.slice(0, -7) + '/uploads/' + req.file.filename)),
             contentType: req.file.mimetype
         }
     }
-    Product.create(obj, (err, item) => {
+    Product.create(obj, (err, product) => {
         if (err) {
             return res.send("error");
         }
+        res.render('product', {
+            title: product.title,
+            product
+        });
     })
-    res.send('Post Added');
+});
+
+// GET Product Upload Page
+router.get('/add', function (req, res, next) {
+    res.render('addproduct', { title: 'Add Product' });
 });
 
 // GET a Product Information
 router.get('/:productid', async (req, res, next) => {
-    const product = await Product.findOne(new ObjectId(req.params._id));
+    const product = await Product.findOne({ _id: new ObjectId(req.params.productid) })
+        .populate({ path: 'uid', select: '-password' })
+        .populate({ path: 'bidders.bidder', select: '-password' });
     if (!product) {
         next(createError(404));
     }
-    res.send(product);
+    product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
+    res.render('product', {
+        title: product.title,
+        product
+    });
 });
 
-// PUT Update Product's detail
-router.put('/:productid', upload.array(), (req, res, next) => {
-    console.log(req.body);
-    Product.findOneAndUpdate(new ObjectId(req.params._id), {
-        ...req.body
+// GET Product Edit Page
+router.get('/edit/:productid', function (req, res, next) {
+    Product.findOne({ _id: new ObjectId(req.params.productid) }, (err, product) => {
+        console.log(req.params.productid)
+        if (err) {
+            return res.send("Error");
+        }
+        if (product.uid.toString() != req.session._id) {
+            return res.send("Not Authorized");
+        }
+        product.tags = product.tags.join(" ");
+        res.render('updateProduct', {
+            title: product.title,
+            product
+        });
+    });
+});
+
+// POST Update Product's detail
+router.post('/edit/:productid', upload.array(), (req, res, next) => {
+    Product.findOneAndUpdate({ _id: new ObjectId(req.params.productid) }, {
+        uid: req.session._id,
+        title: req.body.title,
+        about: req.body.about,
+        tags: req.body.tags.split(' '),
+        time: new Date(req.body.time)
     }, (err, product) => {
         if (err) {
             return res.send("Error");
@@ -75,19 +119,50 @@ router.put('/:productid', upload.array(), (req, res, next) => {
         if (product.uid != req.session._id) {
             return res.send("Not Authorized");
         }
-        res.send(product);
+        res.redirect('/products/' + req.params.productid);
     });
 });
 
-// DELETE a Product
-router.delete('/:productid', function (req, res, next) {
-    Product.deleteOne(new ObjectId(req.params._id), (err, pr) => {
+// POST Delete a Product
+router.post('/delete/:productid', function (req, res, next) {
+    Product.deleteOne({ _id: new ObjectId(req.params.productid) }, (err, pr) => {
         if (err) {
             console.log(err);
             return res.send("Some Error");
         }
     })
     res.send('Deleted');
+});
+
+// POST Bidding on a Product
+router.post('/bid/:productid', function (req, res, next) {
+    Product.findOne({ _id: req.params.productid }, (err, product) => {
+        if (err) {
+            return res.send("Not Found");
+        }
+        if (product.time < new Date()) {
+            return res.send("You are late");
+        }
+        if (product.bidders.length > 0) {
+            product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
+            if (req.body.bid <= product.bidders[0].bid) {
+                return res.send("You must Bid Higher than the current highest bid!");
+            }
+        }
+        Product.updateOne({ _id: req.params.productid }, {
+            $push: {
+                bidders: {
+                    bidder: new ObjectId(req.session._id),
+                    bid: req.body.bid
+                }
+            }
+        }, (err, pro) => {
+            if (err) {
+                return res.send("Error Occured");
+            }
+            res.send("Bid Added");
+        })
+    })
 });
 
 module.exports = router;

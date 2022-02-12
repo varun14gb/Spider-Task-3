@@ -17,7 +17,10 @@ router.get('/', async (req, res, next) => {
   if (!users) {
     return next(createError(404));
   }
-  res.send(users);
+  res.render('users', {
+    title: 'Users',
+    users
+  });
 });
 
 // POST Registeration Information
@@ -53,7 +56,10 @@ router.post('/register', [
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.send(errors);
+    return res.render('register', {
+      title: "Register",
+      errors: errors.errors
+    });
   }
 
   User.create({
@@ -98,6 +104,7 @@ router.post('/login', [
       if (!isValid) {
         throw new Error('Invalid Password');
       }
+      req.body["name"] = existingUser.name;
       req.body["id"] = existingUser._id;
       return true;
     }),
@@ -106,21 +113,24 @@ router.post('/login', [
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.send(errors);
+    return res.render('login', {
+      title: "Login",
+      errors: errors.errors
+    });
   }
-  res.locals.username = req.body.username;
   req.session.loggedIn = true;
-  req.session.username = res.locals.username;
+  req.session.username = req.body.username;
+  req.session.name = req.body.name;
   req.session._id = req.body.id;
   res.redirect('/');
 });
 
 // DELETE Logout the user
-router.post('/logout', (req, res, next) => {
+router.get('/logout', (req, res, next) => {
   req.session.destroy((err) => {
     return res.send(err);
   })
-  res.send('Thank you! Visit again')
+  res.redirect('/');
 })
 
 // GET a User's Information
@@ -130,7 +140,10 @@ router.get('/:userid', async (req, res, next) => {
     return next(createError(404));
   }
   user.password = null;
-  res.send(user);
+  res.render('user', {
+    title: user.name,
+    user
+  });
 });
 
 module.exports = router;

@@ -18,14 +18,12 @@
             </h6>
             <% })} %>
     </div>
-    <form name="registrationForm" action="/users/register" method="POST">
-        <input name="name" type="text" placeholder="Enter Name" required />
+    <form name="loginForm" action="/users/login" method="POST">
         <input name="username" type="text" placeholder="Enter Unique Username" required />
         <input name="password" type="password" minlength="6" placeholder="Enter Password" required />
-        <input name="confirmPassword" type="password" minlength="6" placeholder="Confirm Password" required />
         <button type="submit">Submit</button>
     </form>
-    <p>Already registered? <a href="/">Login Here</a></p>
+    <p>Not registered? <a href="/signup">Signup Here</a></p>
     <%- include('partials/footer'); -%>
 </body>
 

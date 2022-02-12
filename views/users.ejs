@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Auction | <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <%- include('partials/header'); -%>
+        <h1>
+            <%= title %>
+        </h1>
+        <% users.forEach(function(user) { %>
+            <div>
+                <div>
+                    <div>
+                        <h5>
+                            <%= user.username %>
+                        </h5>
+                        <p>
+                            <%= user.name %>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <% }) %>
+                <%- include('partials/footer'); -%>
+</body>
+
+</html>
