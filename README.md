@@ -9,7 +9,7 @@
 - [x] 6. Create a profile page for each individual user. Products should be displayed according to the highest bid at that time.
 
 ## Hacker mode: (40 Points)
-- [ ] 1. In the Public page add an option to search and filter the products based on Tags and Product name.
+- [x] 1. In the Public page add an option to search and filter the products based on Tags and Product name.
 - [ ] 2. Users should be allowed to add comments for a particular post. The user who has created the comment should only have permission to delete and update the respective comment.
 - [ ] 3. Option for giving ratings to different products.
 - [ ] 4. For displaying the posts multiple options such as alphabetical, according to the highest bidder, etc should be present.

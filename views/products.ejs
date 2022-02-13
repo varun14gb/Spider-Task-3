@@ -10,6 +10,10 @@
 
 <body>
     <%- include('partials/header'); -%>
+        <form method="GET" action="/products" class="searchbar">
+            <input name="search" type="text" placeholder="Search for tags or titles" />
+            <button type="submit">&#128269;</button>
+        </form>
         <% products.forEach(function(image) { %>
             <div class="imgcontainer" style="cursor: pointer;" onclick="window.location='/products/<%=image._id %>';">
                 <img src="data:image/<%=image.img.contentType%>;base64,

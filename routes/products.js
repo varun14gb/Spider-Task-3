@@ -21,7 +21,20 @@ var router = express.Router();
 
 // GET Products List
 router.get('/', function (req, res, next) {
-    Product.find({})
+    var query = {};
+    if (req.query.search) {
+        const title = {
+            $regex: new RegExp(`${req.query.search}`),
+            $options: 'i'
+        };
+        const tags = {
+            tags: req.query.search
+        };
+        query = {
+            $or: [{ title }, { ...tags }]
+        }
+    }
+    Product.find(query)
         .populate({ path: 'uid', select: '-password' })
         .populate({ path: 'bidders.bidder', select: '-password' })
         .exec((err, products) => {

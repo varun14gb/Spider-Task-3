@@ -131,3 +131,27 @@ a {
   border: 1px solid rgba(159, 159, 159, 0.204);
   box-shadow: 0px 0px 10px rgb(145, 145, 145);
 }
+
+.searchbar {
+  flex-direction: row;
+  padding: 16px;
+  min-width: 400px;
+  height: 40px;
+}
+
+.searchbar input {
+  margin: 0;
+  padding: 4px;
+  width: 90%;
+  border-radius: 8px 0 0 8px;
+  border: 1px solid rgb(199, 199, 199);
+}
+
+.searchbar button {
+  width: 10%;
+  margin: 0;
+  padding: 0;
+  background-color: rgb(230, 230, 230);
+  border-radius: 0 8px 8px 0;
+  border: 1px solid rgb(199, 199, 199);
+}
