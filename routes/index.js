@@ -42,7 +42,7 @@ router.get('/profile', async (req, res, next) => {
         .populate('bidders.bidder')
         .exec((err, products) => {
           if (err) {
-            return res.render('error', {
+            return res.status(500).render('error', {
               error: {
                 status: '500',
                 message: 'Something Wrong'
@@ -57,7 +57,7 @@ router.get('/profile', async (req, res, next) => {
           });
         });
     } catch (error) {
-      return res.render('error', {
+      return res.status(500).render('error', {
         error: {
           status: '500',
           message: 'Something Wrong'

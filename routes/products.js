@@ -26,7 +26,7 @@ router.get('/', function (req, res, next) {
         .populate({ path: 'bidders.bidder', select: '-password' })
         .exec((err, products) => {
             if (err) {
-                res.render('error', {
+                res.status(500).render('error', {
                     error: {
                         status: '500',
                         message: 'Something Wrong'
@@ -55,7 +55,7 @@ router.post('/', upload.single('image'), function (req, res, next) {
     }
     Product.create(obj, (err, product) => {
         if (err) {
-            return res.render('error', {
+            return res.status(500).render('error', {
                 error: {
                     status: '500',
                     message: 'Something Wrong'
@@ -81,7 +81,7 @@ router.get('/:productid', async (req, res, next) => {
             .populate({ path: 'uid', select: '-password' })
             .populate({ path: 'bidders.bidder', select: '-password' });
         if (!product) {
-            return res.render('error', {
+            return res.status(404).render('error', {
                 error: {
                     status: '404',
                     message: 'Not Found'
@@ -94,7 +94,7 @@ router.get('/:productid', async (req, res, next) => {
             product
         });
     } catch (e) {
-        return res.render('error', {
+        return res.status(500).render('error', {
             error: {
                 status: '500',
                 message: 'Oops!'
@@ -107,7 +107,7 @@ router.get('/:productid', async (req, res, next) => {
 router.get('/edit/:productid', function (req, res, next) {
     Product.findOne({ _id: new ObjectId(req.params.productid) }, (err, product) => {
         if (err) {
-            return res.render('error', {
+            return res.status(500).render('error', {
                 error: {
                     status: '500',
                     message: 'Something Wrong'
@@ -115,7 +115,7 @@ router.get('/edit/:productid', function (req, res, next) {
             });
         }
         if (product.uid.toString() != req.session._id) {
-            return res.render('error', {
+            return res.status(403).render('error', {
                 error: {
                     status: '403',
                     message: 'Not Authorized'
@@ -135,7 +135,7 @@ router.post('/edit/:productid', upload.array(), async (req, res, next) => {
     try {
         const product = await Product.findOne({ _id: new ObjectId(req.params.productid) });
         if (!product) {
-            return res.render('error', {
+            return res.status(404).render('error', {
                 error: {
                     status: '404',
                     message: 'Not Found'
@@ -143,7 +143,7 @@ router.post('/edit/:productid', upload.array(), async (req, res, next) => {
             });
         }
         if (product.uid.toString() != req.session._id) {
-            return res.render('error', {
+            return res.status(403).render('error', {
                 error: {
                     status: '403',
                     message: 'Not Authorized'
@@ -158,7 +158,7 @@ router.post('/edit/:productid', upload.array(), async (req, res, next) => {
             time: new Date(req.body.time)
         }, (err, pro) => {
             if (err) {
-                return res.render('error', {
+                return res.status(500).render('error', {
                     error: {
                         status: '500',
                         message: 'Something Wrong'
@@ -168,7 +168,7 @@ router.post('/edit/:productid', upload.array(), async (req, res, next) => {
             res.redirect('/products/' + req.params.productid);
         });
     } catch (error) {
-        return res.render('error', {
+        return res.status(500).render('error', {
             error: {
                 status: '500',
                 message: 'Something Wrong'
@@ -182,7 +182,7 @@ router.post('/delete/:productid', async (req, res, next) => {
     try {
         const product = await Product.findOne({ _id: new ObjectId(req.params.productid) });
         if (!product) {
-            return res.render('error', {
+            return res.status(404).render('error', {
                 error: {
                     status: '404',
                     message: 'Not Found'
@@ -190,7 +190,7 @@ router.post('/delete/:productid', async (req, res, next) => {
             });
         }
         if (product.uid.toString() != req.session._id) {
-            return res.render('error', {
+            return res.status(403).render('error', {
                 error: {
                     status: '403',
                     message: 'Not Authorized'
@@ -199,7 +199,7 @@ router.post('/delete/:productid', async (req, res, next) => {
         }
         Product.deleteOne({ _id: new ObjectId(req.params.productid) }, (err, pr) => {
             if (err) {
-                return res.render('error', {
+                return res.status(500).render('error', {
                     error: {
                         status: '500',
                         message: 'Something Wrong'
@@ -207,9 +207,9 @@ router.post('/delete/:productid', async (req, res, next) => {
                 });
             }
         })
-        res.send('Deleted');
+        res.redirect('/profile');
     } catch (error) {
-        return res.render('error', {
+        return res.status(500).render('error', {
             error: {
                 status: '500',
                 message: 'Something Wrong'
@@ -223,7 +223,7 @@ router.post('/delete/:productid', async (req, res, next) => {
 router.post('/bid/:productid', function (req, res, next) {
     Product.findOne({ _id: req.params.productid }, (err, product) => {
         if (err) {
-            return res.render('error', {
+            return res.status(404).render('error', {
                 error: {
                     status: '404',
                     message: 'Not Found'
@@ -231,7 +231,7 @@ router.post('/bid/:productid', function (req, res, next) {
             });
         }
         if (product.time < new Date()) {
-            return res.render('error', {
+            return res.status(300).render('error', {
                 error: {
                     status: '300',
                     message: 'You are late for bidding on the product!'
@@ -241,7 +241,7 @@ router.post('/bid/:productid', function (req, res, next) {
         if (product.bidders.length > 0) {
             product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
             if (req.body.bid <= product.bidders[0].bid) {
-                return res.render('error', {
+                return res.status(300).render('error', {
                     error: {
                         status: '300',
                         message: 'You must bid higher than the current highest bid'
@@ -258,14 +258,14 @@ router.post('/bid/:productid', function (req, res, next) {
             }
         }, (err, pro) => {
             if (err) {
-                return res.render('error', {
+                return res.status(500).render('error', {
                     error: {
                         status: '500',
                         message: 'Something Wrong'
                     }
                 });
             }
-            res.send("Bid Added");
+            res.redirect('/products/' + req.params.productid);
         })
     })
 });

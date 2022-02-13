@@ -17,7 +17,7 @@ router.get('/', async (req, res, next) => {
       { $project: { password: 0 } }
     ]);
     if (!users) {
-      return res.render('error', {
+      return res.status(404).render('error', {
         error: {
           status: '404',
           message: 'Not Found'
@@ -29,7 +29,7 @@ router.get('/', async (req, res, next) => {
       users
     });
   } catch (error) {
-    return res.render('error', {
+    return res.status(500).render('error', {
       error: {
         status: '500',
         message: 'Oops!'
@@ -84,7 +84,12 @@ router.post('/register', [
     name: req.body.name
   }, (err, data) => {
     if (err) {
-      res.send(err);
+      return res.status(500).render('error', {
+        error: {
+          status: '500',
+          message: 'Something Wrong'
+        }
+      });
     } else {
       res.redirect('/');
     }
@@ -143,7 +148,7 @@ router.post('/login', [
 // DELETE Logout the user
 router.get('/logout', (req, res, next) => {
   req.session.destroy((err) => {
-    return res.render('error', {
+    return res.status(500).render('error', {
       error: {
         status: '500',
         message: 'Something Wrong'
@@ -158,7 +163,7 @@ router.get('/:userid', async (req, res, next) => {
   try {
     const user = await User.findOne({ username: req.params.userid });
     if (!user) {
-      return res.render('error', {
+      return res.status(404).render('error', {
         error: {
           status: '404',
           message: 'Not Found'
@@ -173,7 +178,7 @@ router.get('/:userid', async (req, res, next) => {
       .populate('bidders.bidder')
       .exec((err, products) => {
         if (err) {
-          return res.render('error', {
+          return res.status(500).render('error', {
             error: {
               status: '500',
               message: 'Something Wrong'
@@ -188,7 +193,7 @@ router.get('/:userid', async (req, res, next) => {
         });
       });
   } catch (error) {
-    return res.render('error', {
+    return res.status(500).render('error', {
       error: {
         status: '500',
         message: 'Something Wrong'
