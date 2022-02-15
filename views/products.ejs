@@ -12,6 +12,15 @@
     <%- include('partials/header'); -%>
         <form method="GET" action="/products" class="searchbar">
             <input name="search" type="text" placeholder="Search for tags or titles" />
+            <select name="filter">
+                <option value="" style="color: grey;" disabled selected>Select your sort option</option>
+                <option value="alphaAsc">Alphabetically</option>
+                <option value="alphaDesc">Alphabetically (Descending)</option>
+                <option value="rating">Highest Rating</option>
+                <option value="ratingDesc">Lowest Rating</option>
+                <option value="bid">Highest Bid</option>
+                <option value="bidDesc">Lowest Bid</option>
+            </select>
             <button type="submit">&#128269;</button>
         </form>
         <% products.forEach(function(image) { %>

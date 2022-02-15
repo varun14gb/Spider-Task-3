@@ -23,6 +23,7 @@ var router = express.Router();
 // GET Products List
 router.get('/', function (req, res, next) {
     var query = {};
+    var sort = {};
     if (req.query.search) {
         const title = {
             $regex: new RegExp(`${req.query.search}`),
@@ -35,11 +36,57 @@ router.get('/', function (req, res, next) {
             $or: [{ title }, { ...tags }]
         }
     }
-    Product.find(query)
-        .populate({ path: 'uid', select: '-password' })
-        .populate({ path: 'bidders.bidder', select: '-password' })
-        .exec((err, products) => {
+    switch (req.query.filter) {
+        case "alphaAsc":
+            sort = {
+                title: 1
+            }
+            break;
+        case "alphaDesc":
+            sort = {
+                title: -1
+            }
+            break;
+        case "bid":
+            sort = {
+                "bidders.bid": -1
+            }
+            break;
+        case "bidDesc":
+            sort = {
+                "bidders.bid": 1
+            }
+            break;
+        case "rating":
+            break;
+        case "ratingDesc":
+            break;
+        default:
+            break;
+    }
+    if (req.query.filter && (req.query.filter == "rating" || req.query.filter == "ratingDesc")) {
+        Product.aggregate([
+            {
+                $addFields: {
+                    rating: {
+                        $cond: {
+                            if: { $eq: ["$rateCount", 0] },
+                            then: 0,
+                            else: {
+                                $divide: ["$rateValue", "$rateCount"]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $sort: {
+                    rating: (req.query.filter == "rating") ? -1 : 1,
+                }
+            }
+        ]).exec((err, products) => {
             if (err) {
+                console.log(err);
                 res.status(500).render('error', {
                     error: {
                         status: '500',
@@ -53,6 +100,28 @@ router.get('/', function (req, res, next) {
                 });
             }
         })
+    } else {
+        Product.find(query)
+            .populate({ path: 'uid', select: '-password' })
+            .populate({ path: 'bidders.bidder', select: '-password' })
+            .collation({ locale: "en" })
+            .sort(sort)
+            .exec((err, products) => {
+                if (err) {
+                    res.status(500).render('error', {
+                        error: {
+                            status: '500',
+                            message: 'Something Wrong'
+                        }
+                    });
+                } else {
+                    res.render('products', {
+                        title: 'Products',
+                        products
+                    });
+                }
+            })
+    }
 });
 
 // POST a Product
