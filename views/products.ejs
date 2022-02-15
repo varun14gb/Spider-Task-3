@@ -27,6 +27,9 @@
                             <%= image.uid.username %>
                         </a>
                     </p>
+                    <p>
+                        Rated : <%= parseFloat(image.rateValue/image.rateCount).toFixed(2) %>
+                    </p>
                     <hr />
                     <p>
                         <%= image.about %>

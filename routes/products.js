@@ -4,6 +4,7 @@ var ObjectId = require('mongodb').ObjectId;
 var fs = require('fs');
 var path = require('path');
 var multer = require('multer');
+const { compareSync } = require('bcryptjs');
 
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -75,10 +76,7 @@ router.post('/', upload.single('image'), function (req, res, next) {
                 }
             });
         }
-        res.render('product', {
-            title: product.title,
-            product
-        });
+        res.redirect('/products/' + product._id.toString())
     })
 });
 
@@ -92,7 +90,8 @@ router.get('/:productid', async (req, res, next) => {
     try {
         const product = await Product.findOne({ _id: new ObjectId(req.params.productid) })
             .populate({ path: 'uid', select: '-password' })
-            .populate({ path: 'bidders.bidder', select: '-password' });
+            .populate({ path: 'bidders.bidder', select: '-password' })
+            .populate({ path: 'comments.commenter', select: '-password' });
         if (!product) {
             return res.status(404).render('error', {
                 error: {
@@ -104,7 +103,8 @@ router.get('/:productid', async (req, res, next) => {
         product.bidders.sort((a, b) => (a.bid > b.bid) ? -1 : ((b.bid > a.bid) ? 1 : 0));
         res.render('product', {
             title: product.title,
-            product
+            product,
+            username: req.session.username
         });
     } catch (e) {
         return res.status(500).render('error', {
@@ -268,6 +268,210 @@ router.post('/bid/:productid', function (req, res, next) {
                     bidder: new ObjectId(req.session._id),
                     bid: req.body.bid
                 }
+            }
+        }, (err, pro) => {
+            if (err) {
+                return res.status(500).render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
+            }
+            res.redirect('/products/' + req.params.productid);
+        })
+    })
+});
+
+// POST add rating to a product
+router.post('/:productid/rating', upload.array(), (req, res, next) => {
+    Product.findOne({ _id: req.params.productid }, (err, product) => {
+        if (err) {
+            return res.status(404).render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        if (req.body.rating < 0 || req.body.rating > 5) {
+            return res.status(300).render('error', {
+                error: {
+                    status: '300',
+                    message: 'Rating should be between 0 and 5'
+                }
+            });
+        }
+        Product.updateOne({ _id: req.params.productid }, {
+            $inc: {
+                rateValue: req.body.rating,
+                rateCount: 1
+            }
+        }, (err, pro) => {
+            if (err) {
+                return res.status(500).render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
+            }
+            res.redirect('/products/' + req.params.productid);
+        })
+    })
+});
+
+// POST comment on a Product
+router.post('/:productid/comment', upload.array(), function (req, res, next) {
+    Product.findOne({ _id: req.params.productid }, (err, product) => {
+        if (err) {
+            return res.status(404).render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        Product.updateOne({ _id: req.params.productid }, {
+            $push: {
+                comments: {
+                    commenter: new ObjectId(req.session._id),
+                    comment: req.body.comment
+                }
+            }
+        }, (err, pro) => {
+            if (err) {
+                return res.status(500).render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
+            }
+            res.redirect('/products/' + req.params.productid);
+        })
+    })
+});
+
+// GET update comment page
+router.get('/:productid/:commentid', function (req, res, next) {
+    Product.findOne({ _id: req.params.productid }, (err, product) => {
+        if (err) {
+            return res.status(404).render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        var comm = false;
+        product.comments.find((o, i) => {
+            if (o._id.toString() === req.params.commentid) {
+                if (o.commenter.toString() !== req.session._id) {
+                    return res.status(403).render('error', {
+                        error: {
+                            status: '403',
+                            message: 'Not Authorized!'
+                        }
+                    });
+                }
+                comm = product.comments[i];
+                return true; // stop searching
+            }
+        });
+        if (!comm) {
+            return res.status(404).render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        res.render('editComment', {
+            title: "Edit Comment",
+            product,
+            comm
+        });
+    })
+});
+
+// POST update a comment on a Product
+router.post('/:productid/:commentid', upload.array(), function (req, res, next) {
+    Product.findOne({ _id: req.params.productid }, (err, product) => {
+        if (err) {
+            return res.status(404).render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        product.comments.find((o, i) => {
+            if (o._id.toString() === req.params.commentid) {
+                if (o.commenter.toString() !== req.session._id) {
+                    return res.status(403).render('error', {
+                        error: {
+                            status: '403',
+                            message: 'Not Authorized!'
+                        }
+                    });
+                }
+                product.comments[i] = { ...product.comments[i], comment: req.body.comment };
+                return true; // stop searching
+            }
+        });
+        Product.updateOne({
+            _id: req.params.productid,
+            "comments._id": req.params.commentid
+        }, {
+            $set: {
+                "comments.$.comment": req.body.comment
+            }
+        }, (err, pro) => {
+            if (err) {
+                return res.status(500).render('error', {
+                    error: {
+                        status: '500',
+                        message: 'Something Wrong'
+                    }
+                });
+            }
+            res.redirect('/products/' + req.params.productid);
+        })
+    })
+});
+
+// GET delete a comment on a Product
+router.get('/:productid/delete/:commentid', upload.array(), function (req, res, next) {
+    Product.findOne({ _id: req.params.productid }, (err, product) => {
+        if (err) {
+            return res.status(404).render('error', {
+                error: {
+                    status: '404',
+                    message: 'Not Found'
+                }
+            });
+        }
+        let temp;
+        product.comments.find((o, i) => {
+            if (o._id.toString() === req.params.commentid) {
+                if (o.commenter.toString() !== req.session._id) {
+                    return res.status(403).render('error', {
+                        error: {
+                            status: '403',
+                            message: 'Not Authorized!'
+                        }
+                    });
+                }
+                temp = o
+                return true; // stop searching
+            }
+        });
+        Product.updateOne({
+            _id: req.params.productid
+        }, {
+            $pull: {
+                comments: temp
             }
         }, (err, pro) => {
             if (err) {

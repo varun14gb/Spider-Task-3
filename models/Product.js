@@ -31,6 +31,25 @@ const productSchema = new mongoose.Schema({
         bid: {
             type: Number
         }
+    }],
+    rateValue: {
+        type: Number,
+        default: 0,
+        max: 5
+    },
+    rateCount: {
+        type: Number,
+        default: 0
+    },
+    comments: [{
+        comment: {
+            type: String,
+            default: ""
+        },
+        commenter: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
     }]
 });
 
